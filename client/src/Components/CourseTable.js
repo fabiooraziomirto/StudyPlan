@@ -31,7 +31,7 @@ function CourseTable(props) {
                 <tbody>
                   {
                     props.courses.map((ex) =>
-                      <CourseRow course={ex} enrolled={props.enrolled} addExam={props.addExam}  deleteExam={props.deleteExam}/>)
+                      <CourseRow course={ex} constraint={props.constraint} enrolled={props.enrolled} addExam={props.addExam}  deleteExam={props.deleteExam}/>)
                   }
                 </tbody>
               </Table>
@@ -52,13 +52,15 @@ function CourseTable(props) {
                     <th>Code</th>
                     <th>Name</th>
                     <th>Credits</th>
+                    <th>Number of Student</th>
+                    <th>Max number of Student</th>
                     <th>Button</th>
                   </tr>
                 </thead>
                 <tbody>
                   {
                     props.courses.map((ex) =>
-                      <CourseRow course={ex} enrolled={props.enrolled} addExam={props.addExam}  deleteExam={props.deleteExam}/>)
+                      <CourseRow course={ex} constraint={props.constraint} enrolled={props.enrolled} addExam={props.addExam}  deleteExam={props.deleteExam}/>)
                   }
                 </tbody>
               </Table>
@@ -71,19 +73,17 @@ function CourseTable(props) {
 }
 
 function CourseRow(props) {
-
   if (props.enrolled !== false || props.enrolled !== undefined) {
     return (
       <tr>
-        <CourseData course={props.course} />
+        <CourseData course={props.course} constraint={props.constraint}/>
         <CourseAction courses={props.course} addExam={props.addExam} deleteExam={props.deleteExam}/>
       </tr>
     );
   } else {
     return (
       <tr>
-        <CourseData course={props.course} />
-
+        <CourseData course={props.course} constraint={props.constraint}/>
       </tr>
     );
   }
@@ -93,22 +93,40 @@ function CourseRow(props) {
 
 
 function CourseData(props) {
+ 
+  let flag = false;
+  if(props.constraint !== undefined){
+    for(let cs of props.constraint){
+      if(cs === props.course.code){
+        flag = true;
+      }
+    }
+  }
   return (
     <>
-      <td>{props.course.code}</td>
+    <td
+        align="center"
+        style={(flag === true) ? { color: "red" } : { color: "black" }}>
+      {props.course.code}</td>
       <td>{props.course.name}</td>
       <td>{props.course.credits}</td>
-      <Accordion defaultActiveKey="0" flush>
-        <Accordion.Item eventKey="1">
-          <Accordion.Header>
-            Description
-          </Accordion.Header>
-          <Accordion.Body>
-            {(props.course.incompatibleWith[0] !== null) ? " Incomaptible with " + props.course.incompatibleWith : " "}
-            {(props.course.preparatoryCourse !== null) ? " Preparatory course is " + props.course.preparatoryCourse : " "}
-          </Accordion.Body>
-        </Accordion.Item>
-      </Accordion>
+      <td>{props.course.maxStudent === null ? "No max student": props.course.maxStudent}</td>
+      <td>{props.course.numStudent === null ? 0 : props.course.numStudent}</td>
+      <td>
+        <Accordion defaultActiveKey="0" flush>
+          <Accordion.Item eventKey="1">
+            <Accordion.Header>
+              Description
+            </Accordion.Header>
+            <Accordion.Body>
+              {(props.course.incompatibleWith[0] !== null) ? " Incomaptible with " + props.course.incompatibleWith : " "}
+              {(props.course.preparatoryCourse !== null) ? " Preparatory course is " + props.course.preparatoryCourse : " "}
+            </Accordion.Body>
+          </Accordion.Item>
+        </Accordion>
+      </td>
+
+      
 
     </>
   );

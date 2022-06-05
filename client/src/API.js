@@ -7,7 +7,7 @@ const getAllCourses = async () => {
   const coursesJson = await response.json();
   
   if (response.ok) {
-    const coursesMap = coursesJson.map(c => new Course(c.code, c.name, c.credits, c.maxStudent, c.incompatibleWith, c.preparatoryCourse));
+    const coursesMap = coursesJson.map(c => new Course(c.code, c.name, c.credits, c.maxStudent, c.numStudent, c.incompatibleWith, c.preparatoryCourse));
     return coursesMap.sort((a, b) => a.name.localeCompare(b.name));
   } else throw coursesJson;
 };
@@ -17,9 +17,8 @@ const getStudyPlan = async () => {
     credentials: 'include',
   });
   const coursesJson = await response.json();
-  
   if (response.ok) {
-    const coursesMap = coursesJson.map(c => new Course(c.code, c.name, c.credits, c.maxStudent, c.incompatibleWith, c.preparatoryCourse));
+    const coursesMap = coursesJson.map(c => new Course(c.code, c.name, c.credits, c.maxStudent, c.numStudent, c.incompatibleWith, c.preparatoryCourse));
     return coursesMap.sort((a, b) => a.name.localeCompare(b.name));
   } else throw coursesJson;
 };
@@ -40,21 +39,20 @@ const addEnroll = async (enroll) => {
   } else throw coursesJson;
 };
 
-const addExam = async (exam) => {
-  console.log(exam)
+const addExam = async (exam, user) => {
     const response = await fetch("http://localhost:3001/api/exam",{
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify(exam)
+      body: JSON.stringify({exam: exam, user: user}),
     });
     const coursesJson = await response.json();
+    
     if (response.ok) {
       return coursesJson;
     } else throw coursesJson;
- 
 };
 
 const addCredits = async (exam, cr) => {
@@ -66,10 +64,10 @@ const addCredits = async (exam, cr) => {
       credentials: 'include',
       body: JSON.stringify({exam: exam, cr: cr})
     });
-    const coursesJson = await response.json();
+    //const coursesJson = await response.json();
     if (response.ok) {
-      return coursesJson;
-    } else throw coursesJson;
+      return response.body;
+    } else throw response.body;
  
 };
 
@@ -83,13 +81,13 @@ const deleteExam = async (exam) => {
       'Content-Type': 'application/json',
     },
     credentials: 'include',
-    body: JSON.stringify(exam),
+    body: JSON.stringify({exam: exam}),
   });
-  const coursesJson = await response.json();
+  //const coursesJson = await response.json();
  
   if (response.ok) {
-    return coursesJson;
-  } else throw coursesJson;
+    return  response.body;
+  } else throw  response.body;
 };
 
 

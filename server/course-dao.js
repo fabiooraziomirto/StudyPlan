@@ -21,7 +21,7 @@ exports.getCourses = (id) => {
           if (row.code === last.code) {
             incompatibleList.push(row.incompatible);
           } else {
-            const course = new Course(last.code, last.name, last.credits, last.maxStudent, incompatibleList, last.preparatory);
+            const course = new Course(last.code, last.name, last.credits, last.maxStudent, last.numStudent, incompatibleList, last.preparatory);
             courses.push(course);
             // Reset
             last = row;
@@ -30,19 +30,19 @@ exports.getCourses = (id) => {
             incompatibleList.push(row.incompatible)
           }
         }
-        const course = new Course(last.code, last.name, last.credits, last.maxStudent, incompatibleList, last.preparatory);
+        const course = new Course(last.code, last.name, last.credits, last.maxStudent, last.numStudent, incompatibleList, last.preparatory);
 
         courses.push(course);
-
+        console.log(courses)
         resolve(courses);
-      }
+      } 
     });
   });
 };
 
 exports.getStudyPlan = (id) => {
   return new Promise((resolve, reject) => {
-    const sql = "SELECT idUser, code, exams.name, maxStudent, exams.credits FROM studyPlan \
+    const sql = "SELECT idUser, code, exams.name, exams.maxStudent, exams.credits, exams.numStudent FROM studyPlan \
     JOIN exams ON studyPlan.codeExam = exams.code\
     JOIN users ON studyPlan.idUser = users.id\
     WHERE users.id = ?";
@@ -60,7 +60,7 @@ exports.getStudyPlan = (id) => {
             if (row.code === last.code) {
               incompatibleList.push(row.incompatible);
             } else {
-              const course = new Course(last.code, last.name, last.credits, last.maxStudent, incompatibleList, last.preparatory);
+              const course = new Course(last.code, last.name, last.credits, last.maxStudent, last.numStudent, incompatibleList, last.preparatory);
               courses.push(course);
               // Reset
               last = row;
@@ -69,52 +69,18 @@ exports.getStudyPlan = (id) => {
               incompatibleList.push(row.incompatible)
             }
           }
-          const course = new Course(last.code, last.name, last.credits, last.maxStudent, incompatibleList, last.preparatory);
+          const course = new Course(last.code, last.name, last.credits, last.maxStudent, last.numStudent, incompatibleList, last.preparatory);
 
           courses.push(course);
-         
+      
           resolve(courses);
-        }
+          
+        } resolve(rows);
       }
     });
   });
 };
 
-
-// Get film by id
-exports.getFilmByID = (id) => {
-  return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM films WHERE id = ?";
-    db.all(sql, [id], (err, row) => {
-      if (err) reject(err);
-      else {
-        const film = row.map(
-          (row) =>
-            new Film(row.id, row.title, row.favorite, row.date, row.rating)
-        );
-        resolve(film);
-      }
-    });
-  });
-};
-
-// Get film by id
-exports.getExamByCode = (code) => {
-  return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM exams \
-        JOIN studyPlan ON exams.code = studyPlan.codeExam WHERE code = ?";
-    db.all(sql, [code], (err, row) => {
-      if (err) reject(err);
-      else {
-        const film = row.map(
-          (row) =>
-            new Film(row.id, row.title, row.favorite, row.date, row.rating)
-        );
-        resolve(film);
-      }
-    });
-  });
-};
 
 // Insert new film
 exports.addStudyPlan = (enroll, id) => {
@@ -132,16 +98,24 @@ exports.addStudyPlan = (enroll, id) => {
   });
 };
 
-
-
 // Insert new film
 exports.addExam = async (body, id) => {
+  console.log(body, id)
   return new Promise((resolve, reject) => {
       const sql =
       "INSERT INTO studyPlan(idUser, codeExam) VALUES(?, ?)";
       db.run(
         sql,
-        [id, body.course.code],
+        [id, body.code],
+        function (err) {
+          if (err) reject(err);
+          else resolve(this.lastID);
+        }
+      );
+      const sqlS = "UPDATE exams SET numStudent = ? WHERE code = ?"
+      db.run(
+        sqlS,
+        [(body.numStudent + 1), body.code],
         function (err) {
           if (err) reject(err);
           else resolve(this.lastID);
@@ -149,6 +123,7 @@ exports.addExam = async (body, id) => {
       );
   });
 };
+
 
 exports.addCredits = async (body, id) => {
   return new Promise((resolve, reject) => {
@@ -213,13 +188,22 @@ exports.deleteFilm = (id, userid) => {
 
 // Delete an existing film
 exports.deleteExam = (id, body) => {
-  console.log(id, body)
+
   return new Promise((resolve, reject) => {
     const sql = "DELETE FROM studyPlan WHERE idUser = ? AND codeExam = ?";
-    db.run(sql, [id, body], (err) => {
+    db.run(sql, [id, body.code], (err) => {
       if (err) reject(err);
       else resolve(null);
     });
+    const sqlS = "UPDATE exams SET numStudent = ? WHERE code = ?"
+      db.run(
+        sqlS,
+        [(body.numStudent - 1), body.code],
+        function (err) {
+          if (err) reject(err);
+          else resolve(this.lastID);
+        }
+      );
   });
 };
 

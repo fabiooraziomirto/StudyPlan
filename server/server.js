@@ -135,7 +135,7 @@ app.get("/api/studyPlan", isLoggedIn, (request, response) => {
   const id = request.user?.id;
   dao
     .getStudyPlan(id)
-    .then((films) => response.status(200).json(films))
+    .then((sP) => response.status(200).json(sP))
     .catch(() => response.status(500).end());
 });
 
@@ -150,18 +150,18 @@ app.post("/api/enroll", isLoggedIn, (request, response) => {
 
 app.post("/api/credits", isLoggedIn, (request, response) => {
   const id = request.user?.id;
-  console.log(request.body)
+ 
   dao
     .addCredits(request.body, id)
     .then(() => response.status(200).end())
     .catch(() => response.status(500).end());
 });
 
-// POST /api/film
+// POST /api/exam
 app.post("/api/exam", isLoggedIn, (request, response) => {
   const id = request.user?.id;
   dao
-    .addExam(request.body, id)
+    .addExam(request.body.exam, request.body.user.id)
     .then(() => response.status(200).end())
     .catch(() => response.status(500).end());
 });
@@ -170,9 +170,8 @@ app.post("/api/exam", isLoggedIn, (request, response) => {
 // DELETE /api/films/:id
 app.delete("/api/exam", isLoggedIn, async (req, res) => {
   const id = req.user?.id;
-  console.log(id, req.body.course.code)
   try {
-    await dao.deleteExam(id, req.body.course.code);
+    await dao.deleteExam(id, req.body.exam);
     res.status(200).end();
   } catch (err) {
     console.error(err);
